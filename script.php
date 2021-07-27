@@ -1,5 +1,13 @@
 <?php
 
+function arrEncoding($arr, $inputEncoding, $outputEncoding)
+{
+    $result = [];
+    foreach ($arr as $value) {
+        $result[] = iconv($inputEncoding, $outputEncoding, $value);
+    }
+    return $result;
+}
 
 $sett = [
     0 => [
@@ -9,6 +17,7 @@ $sett = [
         'outputEncoding' => 'Windows-1251',
         'outputFileSuffix' => 'ыфф_',]
 ];
+
 foreach ($sett as $setting) {
 
 
@@ -33,44 +42,48 @@ foreach ($sett as $setting) {
             $productNameKey = '';
             $saleKey = '';
             $i = 0;
-            while (($line = fgetcsv($csv, 4000, ";")) !== FALSE) {
 
+            while (($line = fgetcsv($csv, 4000, ";")) !== false) {
 
+                $res = arrEncoding($line, $inputEncoding, $outputEncoding);
                 if ($i === 0) {
-                    $weekKey = array_search('MONTH', $line);
-                    $dayKey = array_search('DAY', $line);
-                    $yearKey = array_search('YEAR', $line);
-                    $productNameKey = array_search('PRODUCT_NAME', $line);
-                    $saleKey = array_search('SALE_TYPE', $line);
+                    $weekKey = array_search('MONTH', $res);
+                    $dayKey = array_search('DAY', $res);
+                    $yearKey = array_search('YEAR', $res);
+                    $productNameKey = array_search('PRODUCT_NAME', $res);
+                    $saleKey = array_search('SALE_TYPE', $res);
 
-                    $line[$weekKey] = 'WEEK';
-                    $i++;
-                    continue;
-                }
-                if (!mb_stripos($line[$productNameKey], 'Агент', 0, $inputEncoding)) {
-                    $i++;
-                    continue;
+                    $res[$weekKey] = 'WEEK';
+
+                } else {
+                    $checkStr = iconv($inputEncoding, 'UTF-8', $res[$productNameKey]);
+
+                    if (!mb_strpos($checkStr, 'Агент', 0, $inputEncoding)) {
+
+                        $i++;
+                        continue;
+                    }
+
+                    if (empty(trim($res[$saleKey]))) {
+                        $i++;
+                        continue;
+                    }
+                    $res[$weekKey] = date('W', strtotime($res[$yearKey] . '-' . $res[$weekKey] . '-' . $res[$dayKey]));
                 }
 
-                if (!trim($line[$saleKey])) {
-                    $i++;
-                    continue;
-                }
-                var_dump($line);
-                echo '<hr>';
-                exit();
-
-                $line[$weekKey] = date('W', strtotime($line[$yearKey] . '-' . $line[$weekKey] . '-' . $line[$dayKey]));
+                fputcsv($csvResult, $res, ';');
+                $i++;
 
             }
+            if ($i == 30) {
+                exit('Скрипт отработал');
+            }
+            fclose($csv);
+            fclose($csvResult);
 
         }
 
-
-        fclose($csv);
-        fclose($csvResult);
     }
-
 
 }
 
