@@ -89,7 +89,7 @@ foreach ($sett as $setting) {
                 } else {
                     $checkStr = iconv($inputEncoding, 'UTF-8', $res[$productNameKey]);
 
-                    if (!mb_strpos($checkStr, 'Агент', 0, $inputEncoding)) {
+                    if (mb_strpos($checkStr, 'Агент', 0, $inputEncoding) === false) {
                         $i++;
                         continue;
                     }
