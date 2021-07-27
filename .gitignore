@@ -48,3 +48,11 @@ Thumbs.db
 *.mov
 *.wmv
 
+/destinationFolder/
+/docker/php/000-default.conf
+/docker-compose.yml
+/docker/php/Dockerfile
+/draft.php
+/errorLogs/error.txt
+/docker/php/php.ini
+/docker/php/start-apache

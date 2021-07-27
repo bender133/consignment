@@ -1,6 +1,8 @@
 <?php
 
-function arrEncoding($arr, $inputEncoding, $outputEncoding)
+error_reporting(E_ALL);
+
+function arrEncoding(array $arr, string $inputEncoding, string $outputEncoding): array
 {
     $result = [];
     foreach ($arr as $value) {
@@ -9,20 +11,36 @@ function arrEncoding($arr, $inputEncoding, $outputEncoding)
     return $result;
 }
 
+function myErrorHandler($errno, $msg, $file, $line)
+{
+    if (!is_dir('errorLogs')) {
+        mkdir('errorLogs', 0777, true);
+    }
+
+    $fileName = $_SERVER['DOCUMENT_ROOT'] . '/' . 'errorLogs/' . 'error.txt';
+    var_dump($fileName);
+    $errorText = fopen($fileName, 'a');
+    $errStr = "[" . date('d-m-Y H:i:s') . "]" . "Ошибка №-$errno, message: $msg, in file:  $file, line: $line\n";
+    fwrite($errorText, $errStr);
+    fclose($errorText);
+}
+
+set_error_handler('myErrorHandler', E_ALL);
+
+
 $sett = [
     0 => [
-        'sourceFolder' => '/sourceFolder/',
-        'destinationFolder' => '/destinationFolder/',
+        'sourceFolder' => 'sourceFolder',
+        'destinationFolder' => 'destinationFolder',
         'inputEncoding' => 'Windows-1251',
         'outputEncoding' => 'Windows-1251',
-        'outputFileSuffix' => 'ыфф_',]
+        'outputFileSuffix' => 'ыффuj_',]
 ];
 
 foreach ($sett as $setting) {
 
-
-    $filePath = $_SERVER['DOCUMENT_ROOT'] . $setting['sourceFolder'];
-    $resultPath = $_SERVER['DOCUMENT_ROOT'] . $setting['destinationFolder'];
+    $filePath = $_SERVER['DOCUMENT_ROOT'] . '/' . $setting['sourceFolder'] . '/';
+    $resultPath = $_SERVER['DOCUMENT_ROOT'] . '/' . $setting['destinationFolder'] . '/';
     $inputEncoding = $setting['inputEncoding'];
     $outputEncoding = $setting['outputEncoding'];
     $outputFileSuffix = $setting['outputFileSuffix'];
@@ -33,9 +51,14 @@ foreach ($sett as $setting) {
         $now = date('d-m-Y');
 
         if ($change === $now) {
-            $csv = fopen($file, 'rb') or die(new Exception("ошибка открытия файла $file"));
+
+            if (!is_dir($resultPath)) {
+                mkdir($resultPath, 0777, true);
+            }
+
+            $csv = fopen($file, 'rb');
             $csvResultPath = $resultPath . $outputFileSuffix . basename($file);
-            $csvResult = fopen($csvResultPath, 'w+') or die(new Exception("ошибка открытия файла $csvResultPath"));
+            $csvResult = fopen($csvResultPath, 'w+');
             $weekKey = '';
             $dayKey = '';
             $yearKey = '';
@@ -46,6 +69,14 @@ foreach ($sett as $setting) {
             while (($line = fgetcsv($csv, 4000, ";")) !== false) {
 
                 $res = arrEncoding($line, $inputEncoding, $outputEncoding);
+
+                //чтоб не читал весь файл
+                if ($i == 30) {
+                    fclose($csv);
+                    fclose($csvResult);
+                    exit('Скрипт отработал');
+                }
+
                 if ($i === 0) {
                     $weekKey = array_search('MONTH', $res);
                     $dayKey = array_search('DAY', $res);
@@ -59,7 +90,6 @@ foreach ($sett as $setting) {
                     $checkStr = iconv($inputEncoding, 'UTF-8', $res[$productNameKey]);
 
                     if (!mb_strpos($checkStr, 'Агент', 0, $inputEncoding)) {
-
                         $i++;
                         continue;
                     }
@@ -75,11 +105,10 @@ foreach ($sett as $setting) {
                 $i++;
 
             }
-            if ($i == 30) {
-                exit('Скрипт отработал');
-            }
+
             fclose($csv);
             fclose($csvResult);
+
 
         }
 
