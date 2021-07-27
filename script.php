@@ -18,7 +18,6 @@ function myErrorHandler($errno, $msg, $file, $line)
     }
 
     $fileName = $_SERVER['DOCUMENT_ROOT'] . '/' . 'errorLogs/' . 'error.txt';
-    var_dump($fileName);
     $errorText = fopen($fileName, 'a');
     $errStr = "[" . date('d-m-Y H:i:s') . "]" . "Ошибка №-$errno, message: $msg, in file:  $file, line: $line\n";
     fwrite($errorText, $errStr);
@@ -30,6 +29,12 @@ set_error_handler('myErrorHandler', E_ALL);
 
 $sett = [
     0 => [
+        'sourceFolder' => '111',
+        'destinationFolder' => 'destinationFolder',
+        'inputEncoding' => 'Windows-1251',
+        'outputEncoding' => 'Windows-1251',
+        'outputFileSuffix' => 'ыффuj_',],
+    1 => [
         'sourceFolder' => 'sourceFolder',
         'destinationFolder' => 'destinationFolder',
         'inputEncoding' => 'Windows-1251',
@@ -39,7 +44,13 @@ $sett = [
 
 foreach ($sett as $setting) {
 
+
     $filePath = $_SERVER['DOCUMENT_ROOT'] . '/' . $setting['sourceFolder'] . '/';
+    if (!is_dir($filePath)) {
+        trigger_error("папка $filePath не существует", $error_level = E_USER_ERROR);
+        continue;
+    }
+
     $resultPath = $_SERVER['DOCUMENT_ROOT'] . '/' . $setting['destinationFolder'] . '/';
     $inputEncoding = $setting['inputEncoding'];
     $outputEncoding = $setting['outputEncoding'];
@@ -108,7 +119,6 @@ foreach ($sett as $setting) {
 
             fclose($csv);
             fclose($csvResult);
-
 
         }
 
