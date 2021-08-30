@@ -54,5 +54,11 @@ Thumbs.db
 /docker/php/Dockerfile
 /draft.php
 /errorLogs/error.txt
+/logs/
 /docker/php/php.ini
 /docker/php/start-apache
+/settings.example.php
+/settings.php
+/testFolder/
+/sourceFolder/
+/sourceFolder/20210612-report-daily.csv
